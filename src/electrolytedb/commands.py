@@ -90,6 +90,7 @@ def get_edb_data(filename: str) -> pathlib.Path:
         Path object for file.
     """
     from electrolytedb import data
+
     path = pathlib.Path(data.__path__[0])
 
     return path / filename
