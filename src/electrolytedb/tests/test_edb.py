@@ -18,9 +18,9 @@ import pytest
 
 from pyomo.common.dependencies import attempt_import
 
-from watertap.edb import commands
-from watertap.edb.db_api import ElectrolyteDB
-from watertap.edb.validate import validate
+from electrolytedb import commands
+from electrolytedb.db_api import ElectrolyteDB
+from electrolytedb.validate import validate
 
 mongomock, mongomock_available = attempt_import("mongomock")
 

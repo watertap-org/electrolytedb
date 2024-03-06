@@ -89,9 +89,10 @@ def get_edb_data(filename: str) -> pathlib.Path:
     Returns:
         Path object for file.
     """
-    from watertap import _ROOT
+    from electrolytedb import data
+    path = pathlib.Path(data.__path__[0])
 
-    return _ROOT / "edb" / "data" / filename
+    return path / filename
 
 
 def level_from_verbosity(vb):

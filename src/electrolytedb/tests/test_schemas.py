@@ -15,7 +15,7 @@ Test schemas module
 import pytest
 
 pytest.importorskip(
-    "watertap.edb.schemas", reason="Missing optional dependencies for EDB schemas"
+    "electrolytedb.schemas", reason="Missing optional dependencies for EDB schemas"
 )
 from ..schemas import schemas
 from ..data_model import Reaction

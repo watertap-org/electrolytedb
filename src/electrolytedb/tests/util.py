@@ -15,7 +15,7 @@ Utility functions for EDB tests
 import pytest
 from pyomo.common.dependencies import attempt_import
 
-from watertap.edb.db_api import ElectrolyteDB
+from electrolytedb.db_api import ElectrolyteDB
 
 mongomock, mongomock_available = attempt_import("mongomock")
 

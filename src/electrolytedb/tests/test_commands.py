@@ -22,7 +22,7 @@ from click import Command
 from click.testing import CliRunner, Result
 import pymongo
 
-from watertap.edb import commands, ElectrolyteDB
+from electrolytedb import commands, ElectrolyteDB
 
 
 @pytest.fixture(scope="module")
@@ -117,7 +117,7 @@ def mock_edb(monkeypatch) -> EDBClientFactory:
     client_factory = EDBClientFactory(mongomock.MongoClient())
 
     with monkeypatch.context() as mp:
-        mp.setattr("watertap.edb.db_api.MongoClient", client_factory)
+        mp.setattr("electrolytedb.db_api.MongoClient", client_factory)
         yield client_factory
 
 
