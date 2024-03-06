@@ -57,3 +57,4 @@ __author__ = "Dan Gunter"
 
 # Convenience imports
 from .db_api import ElectrolyteDB
+from ._version import __version__

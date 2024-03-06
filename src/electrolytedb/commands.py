@@ -31,6 +31,7 @@ _, json_schema_available = attempt_import("json_schema_for_humans")
 from .db_api import ElectrolyteDB
 from .validate import validate, ValidationError
 from .schemas import schemas as edb_schemas
+from ._version import __version__
 
 _log = logging.getLogger(__name__)
 
@@ -126,7 +127,7 @@ def _connect_or_quit(url, database):
 
 
 @click.group()
-@click.version_option(version=None)
+@click.version_option(version=__version__)
 @click.option(
     "--verbose",
     "-v",
