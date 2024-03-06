@@ -1,0 +1,30 @@
+[build-system]
+requires = [
+    "setuptools >= 64",
+    "setuptools_scm >= 7",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "watertap-electrolytedb" 
+readme = "README.md"
+# dynamic = ["version"]
+version = "24.3.6"
+dependencies = [
+    "pyomo",  # pyomo.environ.units
+    "idaes-pse",  # electrolytedb.data_model
+    "pymongo > 3",
+    "fastjsonschema",
+    "click",
+]
+[project.scripts]
+edb = "electrolytedb.commands:command_base"
+[project.optional-dependencies]
+testing = [
+    "pytest",
+    "mongomock",
+    "json-schema-for-humans",
+    "pytest-cov",
+]
+[project.entry-points.pytest11]
+"edb" = "electrolytedb._pytest_plugin"
