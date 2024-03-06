@@ -5,11 +5,12 @@ requires = [
 ]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools_scm]
+
 [project]
 name = "watertap-electrolytedb" 
 readme = "README.md"
-# dynamic = ["version"]
-version = "24.3.6"
+dynamic = ["version"]
 dependencies = [
     "pyomo",  # pyomo.environ.units
     "idaes-pse",  # electrolytedb.data_model
