@@ -22,3 +22,63 @@ jobs:
       - name: Run Black to verify that the committed code is formatted
         run: |
           black --check .
+
+
+defaults:
+  run:
+    shell: bash -l {0}
+
+env:
+  # --color=yes needed for colorized output to be shown in GHA logs
+  PYTEST_ADDOPTS: "--color=yes"
+  PIP_PROGRESS_BAR: "off"
+
+  pytest:
+    name: pytest (${{ matrix.variant }}/${{ matrix.runner }}/${{ matrix.python-version }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - linux
+          - win64
+        variant:
+          - standard
+          - dev
+        python-version:
+          - '3.8'
+          - '3.11'
+        include:
+          - os: linux
+            runner: ubuntu-22.04
+          - os: win64
+            runner: windows-2022
+
+    steps:
+
+      - name: Set up Conda env
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          activate-environment: electrolytedb-env
+          python-version: ${{ matrix.python-version }}
+          miniconda-version: latest
+
+      - name: Clone repo
+        if: variant == 'dev'
+        uses: actions/checkout@v4
+
+      - name: Install (contributors)
+        if: variant == 'dev'
+        run: |
+          pip install -r requirements-dev.txt
+
+      - name: Install (standard)
+        if: variant == 'standard'
+        env:
+          _pip_install_url: git+${{ github.server_url }}/${{ github.repository }}@${{ github.ref }}
+        run: |
+          pip install "watertap-electrolytedb[testing] @ $_pip_install_url"
+
+      - name: Run pytest
+        run: |
+          pytest --pyargs electrolytedb
