@@ -63,16 +63,16 @@ jobs:
           miniconda-version: latest
 
       - name: Clone repo
-        if: variant == 'dev'
+        if: matrix.variant == 'dev'
         uses: actions/checkout@v4
 
       - name: Install (contributors)
-        if: variant == 'dev'
+        if: matrix.variant == 'dev'
         run: |
           pip install -r requirements-dev.txt
 
       - name: Install (standard)
-        if: variant == 'standard'
+        if: matrix.variant == 'standard'
         env:
           _pip_install_url: git+${{ github.server_url }}/${{ github.repository }}@${{ github.ref }}
         run: |
