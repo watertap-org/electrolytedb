@@ -2,6 +2,15 @@ on:
   push:
   pull_request:
 
+defaults:
+  run:
+    shell: bash -l {0}
+
+env:
+  # --color=yes needed for colorized output to be shown in GHA logs
+  PYTEST_ADDOPTS: "--color=yes"
+  PIP_PROGRESS_BAR: "off"
+
 jobs:
 
   code-formatting:
@@ -22,16 +31,6 @@ jobs:
       - name: Run Black to verify that the committed code is formatted
         run: |
           black --check .
-
-
-defaults:
-  run:
-    shell: bash -l {0}
-
-env:
-  # --color=yes needed for colorized output to be shown in GHA logs
-  PYTEST_ADDOPTS: "--color=yes"
-  PIP_PROGRESS_BAR: "off"
 
   pytest:
     name: pytest (${{ matrix.variant }}/${{ matrix.os }}/${{ matrix.python-version }})
