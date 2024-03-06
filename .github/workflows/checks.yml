@@ -34,8 +34,8 @@ env:
   PIP_PROGRESS_BAR: "off"
 
   pytest:
-    name: pytest (${{ matrix.variant }}/${{ matrix.runner }}/${{ matrix.python-version }})
-    runs-on: ${{ matrix.runner }}
+    name: pytest (${{ matrix.variant }}/${{ matrix.os }}/${{ matrix.python-version }})
+    runs-on: ${{ matrix.runner-version }}
     strategy:
       fail-fast: false
       matrix:
@@ -50,9 +50,9 @@ env:
           - '3.11'
         include:
           - os: linux
-            runner: ubuntu-22.04
+            runner-version: ubuntu-22.04
           - os: win64
-            runner: windows-2022
+            runner-version: windows-2022
 
     steps:
 
