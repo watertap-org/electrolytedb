@@ -12,32 +12,11 @@
 """
 Utility functions for EDB tests
 """
-import pytest
-from pyomo.common.dependencies import attempt_import
-
-from electrolytedb.db_api import ElectrolyteDB
-
-mongomock, mongomock_available = attempt_import("mongomock")
 
 
-class MockDB(ElectrolyteDB):
-    def __init__(self, db="foo", **kwargs):
-        if not mongomock_available:
-            pytest.skip(reason="mongomock (EDB optional dependency) not available")
-
-        self._client = mongomock.MongoClient()
-        self._db = getattr(self._client, db)
-        # note: don't call superclass!
-        self._database_name = db
-        self._server_url = "mock"
-
-
-@pytest.fixture
-def mockdb():
-    return MockDB()
-
-
-def dict_diff(d1, d2, result=[], pfx=""):
+def dict_diff(d1, d2, result=None, pfx=""):
+    if result is None:
+        result = []
     if isinstance(d1, list) and isinstance(d2, list):
         if len(d1) != len(d2):
             result.append(

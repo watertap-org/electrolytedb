@@ -13,41 +13,20 @@
 High-level tests for the Electrolyte Database (EDB)
 """
 import json
-import os
+
 import pytest
 
-from pyomo.common.dependencies import attempt_import
-
+from electrolytedb import ElectrolyteDB
 from electrolytedb import commands
-from electrolytedb.db_api import ElectrolyteDB
-from electrolytedb.validate import validate
-
-mongomock, mongomock_available = attempt_import("mongomock")
+from electrolytedb import validate
 
 
-class MockDB(ElectrolyteDB):
-    def __init__(self, db="foo", **kwargs):
-        if not mongomock_available:
-            pytest.skip(reason="mongomock (EDB optional dependency) not available")
-
-        self._client = mongomock.MongoClient()
-        self._db = getattr(self._client, db)
-        # note: don't call superclass!
-        self._database_name = db
-        self._server_url = "mock"
+def test_connect(edb):
+    assert isinstance(edb, ElectrolyteDB)
 
 
-@pytest.fixture
-def mockdb():
-    return MockDB()
-
-
-def test_connect(mockdb):
-    assert mockdb is not None
-
-
-def test_load_bootstrap_no_validate(mockdb):
-    commands._load_bootstrap(mockdb, do_validate=False)
+def test_load_bootstrap_no_validate(mock_edb):
+    commands._load_bootstrap(mock_edb, do_validate=False)
 
 
 @pytest.mark.unit
@@ -61,19 +40,8 @@ def test_load_bootstrap_data():
                 record = ElectrolyteDB._process_component(record)
             elif t == "reaction":
                 record = ElectrolyteDB._process_reaction(record)
-            validate(record, obj_type=t)
+            validate.validate(record, obj_type=t)
 
 
-@pytest.mark.unit
-def test_cloudatlas():
-    # this env var should be an encrypted secret in the repository
-    passwd = os.environ.get("EDB_CLOUD_PASSWORD", "")
-    if not passwd:
-        pytest.skip("No password found for MongoDB cloud database")
-    url_template = (
-        "mongodb+srv://nawi:{passwd}@cluster0.utpac.mongodb.net/test?"
-        "authSource=admin&replicaSet=atlas-nxwe6d-shard-0&"
-        "readPreference=primary&ssl=true"
-    )
-    print(f"Connecting to MongoDB cloud server at url={url_template}")
-    client = ElectrolyteDB(url=url_template.format(passwd=passwd))
+def test_cloudatlas(cloud_edb):
+    assert isinstance(cloud_edb, ElectrolyteDB)

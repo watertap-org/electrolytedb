@@ -16,40 +16,9 @@ import pytest
 from ..db_api import ElectrolyteDB
 from ..data_model import Component, Reaction, Base
 from ..commands import _load_bootstrap
-from pymongo import MongoClient
-from .util import MockDB
-
-
-@pytest.fixture
-def mockdb():
-    return MockDB()
-
-
-# Test for MongoDB server at default URL
-g_mongo_server = True
-try:
-    conn = MongoClient(
-        ElectrolyteDB.DEFAULT_URL,
-        serverSelectionTimeoutMS=1000,
-    )
-    conn.server_info()
-except Exception as err:
-    print(f"Cannot connect to MongoDB: {err}")
-    g_mongo_server = False
-
-requires_mongo = pytest.mark.skipif(
-    g_mongo_server is False,
-    reason=f"Cannot connect to MongoDB server at {ElectrolyteDB.DEFAULT_URL}",
-)
-
-
-@pytest.fixture(scope="module")
-def edb():
-    return ElectrolyteDB()
 
 
 @pytest.mark.component
-@requires_mongo
 def test_edb_init(edb):
     assert edb is not None
     assert edb.connect_status_str == "Connection succeeded"
@@ -57,7 +26,6 @@ def test_edb_init(edb):
 
 
 @pytest.mark.component
-@requires_mongo
 def test_edb_load(edb):
     # Load bootstrap for temporary testing purposes
     _load_bootstrap(edb)
@@ -67,7 +35,6 @@ def test_edb_load(edb):
 
 
 @pytest.mark.component
-@requires_mongo
 def test_edb_get_components(edb):
     res_obj_comps = edb.get_components(element_names=["H", "O"])
     for comp_obj in res_obj_comps:
@@ -77,10 +44,6 @@ def test_edb_get_components(edb):
     assert edb._process_species("H2O") == "H2O"
     assert edb._process_species("H_+") == "H"
     assert edb._process_species("OH_-") == "OH"
-
-    # Drop the bootstrap database for cleaning
-    edb.drop_database(edb.DEFAULT_URL, edb.DEFAULT_DB)
-    assert edb.is_empty()
 
 
 @pytest.mark.unit
@@ -167,13 +130,14 @@ data2 = data1.copy() + [
         (["H2CO3"], data2, 2, 0, 2),
     ],
 )
-def test_get_reactions(mockdb, components, data, any_num, all_num, new_num):
-    insert_reactions(mockdb._db.reaction, data)
-    reactions = mockdb.get_reactions(components, any_components=True)
+def test_get_reactions(mock_edb, components, data, any_num, all_num, new_num):
+    edb = mock_edb
+    insert_reactions(edb._db.reaction, data)
+    reactions = edb.get_reactions(components, any_components=True)
     assert len(list(reactions)) == any_num
-    reactions = mockdb.get_reactions(components, any_components=False)
+    reactions = edb.get_reactions(components, any_components=False)
     assert len(list(reactions)) == all_num
-    reactions = mockdb.get_reactions(
+    reactions = edb.get_reactions(
         components, any_components=False, include_new_components=True
     )
     assert len(list(reactions)) == new_num

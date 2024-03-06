@@ -25,6 +25,7 @@ except ImportError:
     certifi = None
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
+from pymongo.errors import ServerSelectionTimeoutError
 
 # package
 from .data_model import Result, Component, Reaction, Base, DataWrapper
@@ -135,7 +136,7 @@ class ElectrolyteDB:
         result = True
         try:
             _ = cls(url=url, db=db, check_connection=True)
-        except ConnectionFailure:
+        except (ConnectionFailure, ServerSelectionTimeoutError):
             result = False
         return result
 
