@@ -26,5 +26,7 @@ pip install -r requirements-dev.txt
 ### Running tests
 
 ```sh
-pytest --pyargs electrolytedb
+pytest --pyargs electrolytedb --edb=mock
+# requires mongod to be installed, e.g. conda install -c conda-forge mongodb
+pytest --pyargs electrolytedb --edb=mongod
 ```

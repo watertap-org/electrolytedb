@@ -47,6 +47,9 @@ jobs:
         python-version:
           - '3.8'
           - '3.11'
+        test-mode:
+          - mock
+          - mongod
         include:
           - os: linux
             runner-version: ubuntu-22.04
@@ -78,6 +81,11 @@ jobs:
         run: |
           pip install "watertap-electrolytedb[testing] @ $_pip_install_url"
 
+      - name: Install mongod
+        if: matrix.test-mode == 'mongod'
+        run: |
+          conda install -c conda-forge mongodb
+
       - name: Run pytest
         run: |
-          pytest --pyargs electrolytedb
+          pytest --pyargs electrolytedb --edb="${{ matrix.test-mode }}"

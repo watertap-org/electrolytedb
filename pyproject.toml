@@ -28,4 +28,4 @@ testing = [
     "pytest-cov",
 ]
 [project.entry-points.pytest11]
-"edb" = "electrolytedb._pytest_plugin"
+"edb" = "electrolytedb._pytest_plugin:edb"
