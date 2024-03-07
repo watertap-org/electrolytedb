@@ -33,7 +33,7 @@ jobs:
           black --check .
 
   pytest:
-    name: pytest (${{ matrix.variant }}/${{ matrix.os }}/${{ matrix.python-version }})
+    name: pytest (${{ matrix.variant }}/${{ matrix.os }}/${{ matrix.python-version }}/${{ matrix.test-mode }})
     runs-on: ${{ matrix.runner-version }}
     strategy:
       fail-fast: false
@@ -42,7 +42,7 @@ jobs:
           - linux
           - win64
         variant:
-          - standard
+          - std
           - dev
         python-version:
           - '3.8'
@@ -75,7 +75,7 @@ jobs:
           pip install -r requirements-dev.txt
 
       - name: Install (standard)
-        if: matrix.variant == 'standard'
+        if: matrix.variant == 'std'
         env:
           _pip_install_url: git+${{ github.server_url }}/${{ github.repository }}@${{ github.ref }}
         run: |
