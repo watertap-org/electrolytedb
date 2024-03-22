@@ -5,12 +5,16 @@ import shutil
 import subprocess
 import tempfile
 from collections import abc
+from numbers import Number
 from pathlib import Path
 from typing import Callable
+from typing import Iterable
 from typing import List
 from typing import Optional
+from typing import Union
 
 import pytest
+import pymongo
 
 from electrolytedb import ElectrolyteDB
 from electrolytedb.commands import _load_bootstrap
@@ -42,7 +46,9 @@ class NoServer(DBHandler):
 
 
 class Mongod(DBHandler):
-    def __init__(self, mongod_exe: str = "mongod"):
+    def __init__(
+        self, mongod_exe: str = "mongod", retry: Union[Number, Iterable[Number]] = 1
+    ):
         self._mongod_exe = shutil.which(mongod_exe)
         assert self._mongod_exe is not None
         self._proc = None
@@ -60,10 +66,36 @@ class Mongod(DBHandler):
         else:
             # for CTRL_BREAK_EVENT to work properly, these flags must be specified
             self._proc_kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
+        if isinstance(retry, Number):
+            retry = [retry]
+        self._retry = retry
 
     def client(self) -> ElectrolyteDB:
         assert ElectrolyteDB.can_connect()
         return ElectrolyteDB()
+
+    def _wait_for_server_online(self, retry_intervals_s: list, **kwargs):
+        def _log(msg):
+            print(f"Mongod: {msg}", flush=True)
+
+        total_time_waited_s = 0.0
+        for wait_time_s in retry_intervals_s:
+            c = client_to_test_connection = pymongo.MongoClient(
+                **kwargs, serverSelectionTimeoutMS=(wait_time_s * 1000)
+            )
+            try:
+                info = c.server_info()
+            except pymongo.errors.ConnectionFailure:
+                _log(f"Could not connect to server in {wait_time_s} seconds")
+                total_time_waited_s += wait_time_s
+            else:
+                _log(f"Connected to server within {total_time_waited_s} seconds")
+                return info
+
+        n_attempts = len(retry_intervals_s)
+        raise pymongo.errors.ConnectionFailure(
+            f"Unable to connect to server after {n_attempts=} ({total_time_waited_s} total seconds waited)"
+        )
 
     def setup(self):
         self._tmpdir = tempfile.TemporaryDirectory()
@@ -78,6 +110,8 @@ class Mongod(DBHandler):
             text=True,
             **self._proc_kwargs,
         )
+        # the uncaught exception raised here will cause a pytest INTERNALERROR
+        self._wait_for_server_online(retry_intervals_s=self._retry)
 
     def __str__(self) -> str:
         return f"{self.__class__.__name__}({self._mongod_exe} pid={self._proc.pid} returncode={self._proc.returncode})"
@@ -112,12 +146,16 @@ class Plugin:
             self._server = NoServer()
             self._make_client = MockDB
         elif mode == "mongod":
-            self._server = Mongod()
+            # self._server = Mongod(retry=[1, 2, 5, 10, 20])
+            # self._server = Mongod(retry=[0.001, 0.002, 0.005, 0.1, 1])
+            self._server = Mongod(retry=[0.001])
             self._make_client = self._server.client
         else:
             raise pytest.UsageError(
                 f"Invalid EDB mode {mode!r}. Available: {self._modes}"
             )
+
+    def pytest_sessionstart(self):
 
         self._server.setup()
 
