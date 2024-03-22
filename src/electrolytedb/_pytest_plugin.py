@@ -56,16 +56,17 @@ class Mongod(DBHandler):
         self._data_dir = None
         self._proc_kwargs = {}
         self._proc_output = None
+
+        self._proc_kwargs["stdout"] = subprocess.PIPE
         try:
             # this is specific to Windows
             self._shutdown_signal = signal.CTRL_BREAK_EVENT
         except AttributeError:
             self._shutdown_signal = signal.SIGINT
-            # on non-Windows, mongod is fast so we don't need to show its stdout
-            self._proc_kwargs["stdout"] = subprocess.PIPE
         else:
             # for CTRL_BREAK_EVENT to work properly, these flags must be specified
             self._proc_kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
+
         if isinstance(retry, Number):
             retry = [retry]
         self._retry = retry
