@@ -79,9 +79,10 @@ class Mongod(DBHandler):
         assert ElectrolyteDB.can_connect()
         return ElectrolyteDB()
 
+    def _log(self, msg):
+        print(f"Mongod: {msg}", flush=True)
+
     def _wait_for_server_online(self, retry_intervals_s: list, **kwargs):
-        def _log(msg):
-            print(f"Mongod: {msg}", flush=True)
 
         total_time_waited_s = 0.0
         for wait_time_s in retry_intervals_s:
@@ -91,10 +92,10 @@ class Mongod(DBHandler):
             try:
                 info = c.server_info()
             except pymongo.errors.ConnectionFailure:
-                _log(f"Could not connect to server in {wait_time_s} seconds")
+                self._log(f"Could not connect to server in {wait_time_s} seconds")
                 total_time_waited_s += wait_time_s
             else:
-                _log(f"Connected to server within {total_time_waited_s} seconds")
+                self._log(f"Connected to server within {total_time_waited_s} seconds")
                 return info
 
         n_attempts = len(retry_intervals_s)
@@ -116,7 +117,13 @@ class Mongod(DBHandler):
             **self._proc_kwargs,
         )
         # the uncaught exception raised here will cause a pytest INTERNALERROR
-        self._wait_for_server_online(retry_intervals_s=self._retry)
+        try:
+            self._wait_for_server_online(retry_intervals_s=self._retry)
+        except Exception as err:
+            self._log(f"server setup failed: {err=}")
+            self.teardown()
+            self._log(f"{self._proc_output=}")
+            self._log(f"{self._proc.returncode=}")
 
     def __str__(self) -> str:
         return f"{self.__class__.__name__}({self._mongod_exe} pid={self._proc.pid} returncode={self._proc.returncode})"
@@ -151,7 +158,8 @@ class Plugin:
             self._server = NoServer()
             self._make_client = MockDB
         elif mode == "mongod":
-            self._server = Mongod(retry=[1, 2, 5, 10, 20])
+            # self._server = Mongod(retry=[1, 2, 5, 10, 20])
+            self._server = Mongod(retry=[0.001])
             self._make_client = self._server.client
         else:
             raise pytest.UsageError(
