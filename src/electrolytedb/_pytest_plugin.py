@@ -158,7 +158,7 @@ class Plugin:
             self._server = NoServer()
             self._make_client = MockDB
         elif mode == "mongod":
-            self._server = Mongod(retry=[1, 2, 5, 10, 20])
+            self._server = Mongod(retry=[1, 2, 5, 10, 20, 30, 60, 120, 180])
             self._make_client = self._server.client
         else:
             raise pytest.UsageError(
