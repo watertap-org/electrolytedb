@@ -84,7 +84,7 @@ jobs:
       - name: Install mongod
         if: matrix.test-mode == 'mongod'
         run: |
-          conda install -c conda-forge mongodb
+          conda install -c conda-forge mongodb=4
 
       - name: Run pytest
         run: |
