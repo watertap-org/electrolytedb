@@ -572,7 +572,7 @@ recarbonation_reaction_config = {
                     ("Liq", "H_+"): 1,
                     ("Liq", "OH_-"): 1,
                 },
-            }
+            },
             # End parameter_data
         },
         # End R1
@@ -597,7 +597,7 @@ recarbonation_reaction_config = {
                     ("Liq", "CO2"): -1,
                     ("Liq", "H2O"): 0,
                 },
-            }
+            },
             # End parameter_data
         },
         # End R2
@@ -622,7 +622,7 @@ recarbonation_reaction_config = {
                     ("Liq", "H_+"): 1,
                     ("Liq", "HCO3_-"): 1,
                 },
-            }
+            },
             # End parameter_data
         },
         # End R3
@@ -647,10 +647,10 @@ recarbonation_reaction_config = {
                     ("Liq", "H_+"): 1,
                     ("Liq", "CO3_2-"): 1,
                 },
-            }
+            },
             # End parameter_data
-        }
+        },
         # End R4
-    }
+    },
     # End equilibrium_reactions
 }
