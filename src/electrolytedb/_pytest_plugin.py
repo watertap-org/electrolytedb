@@ -57,7 +57,11 @@ class Mongod(DBHandler):
         self._proc_kwargs = {}
         self._proc_output = None
 
-        self._proc_kwargs["stdout"] = subprocess.PIPE
+        self._proc_kwargs.update(
+            stdout=subprocess.PIPE,
+            # without bufsize=0, it doesn't seem to work on Windows when stdout=PIPE
+            bufsize=0,
+        )
         try:
             # this is specific to Windows
             self._shutdown_signal = signal.CTRL_BREAK_EVENT
@@ -155,8 +159,10 @@ class Plugin:
             )
 
     def pytest_sessionstart(self):
-
         self._server.setup()
+
+    def pytest_sessionfinish(self):
+        self._server.teardown()
 
     @pytest.hookimpl(tryfirst=True)
     def pytest_report_header(self) -> List[str]:
