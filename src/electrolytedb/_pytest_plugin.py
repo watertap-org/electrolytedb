@@ -106,9 +106,12 @@ class Mongod(DBHandler):
 
     def _display_logs(self, logs: str):
         for line in logs.splitlines():
-            event = json.loads(line)
-            pretty = json.dumps(event, indent=4)
-            print(pretty)
+            try:
+                event_data = json.loads(line)
+                to_print = json.dumps(event, indent=4)
+            except Exception as e:
+                to_print = line
+            print(to_print)
 
     def setup(self):
         self._tmpdir = tempfile.TemporaryDirectory()
