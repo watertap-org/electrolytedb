@@ -217,8 +217,5 @@ class Plugin:
         client = ElectrolyteDB(url=url_template.format(passwd=passwd))
         yield client
 
-    def pytest_sessionfinish(self):
-        self._server.teardown()
-
 
 edb = Plugin()
