@@ -1,4 +1,5 @@
 import contextlib
+import json
 import os
 import signal
 import shutil
@@ -103,6 +104,12 @@ class Mongod(DBHandler):
             f"Unable to connect to server after {n_attempts=} ({total_time_waited_s} total seconds waited)"
         )
 
+    def _display_logs(self, logs: str):
+        for line in logs.splitlines():
+            event = json.loads(line)
+            pretty = json.dumps(event, indent=4)
+            print(pretty)
+
     def setup(self):
         self._tmpdir = tempfile.TemporaryDirectory()
         self._data_dir = Path(self._tmpdir.name).resolve()
@@ -122,8 +129,8 @@ class Mongod(DBHandler):
         except Exception as err:
             self._log(f"server setup failed: {err=}")
             self.teardown()
-            self._log(f"{self._proc_output=}")
             self._log(f"{self._proc.returncode=}")
+            self._display_logs(self._proc_output)
 
     def __str__(self) -> str:
         return f"{self.__class__.__name__}({self._mongod_exe} pid={self._proc.pid} returncode={self._proc.returncode})"
@@ -132,6 +139,7 @@ class Mongod(DBHandler):
         self._proc.send_signal(self._shutdown_signal)
         # err will be empty because we're not capturing it
         self._proc_output, err = self._proc.communicate(timeout=timeout)
+        self._display_logs(self._proc_output)
         self._tmpdir.cleanup()
 
 
