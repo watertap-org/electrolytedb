@@ -58,11 +58,6 @@ class Mongod(DBHandler):
         self._proc_kwargs = {}
         self._proc_output = None
 
-        self._proc_kwargs.update(
-            stdout=subprocess.PIPE,
-            # without bufsize=0, it doesn't seem to work on Windows when stdout=PIPE
-            bufsize=0,
-        )
         try:
             # this is specific to Windows
             self._shutdown_signal = signal.CTRL_BREAK_EVENT
@@ -104,8 +99,12 @@ class Mongod(DBHandler):
             f"Unable to connect to server after {n_attempts=} ({total_time_waited_s} total seconds waited)"
         )
 
-    def _display_logs(self, logs: str):
+    def _display_logs(self, logs: str = None):
+        if not logs:
+            self._log("No logs to display")
+            return
         for line in logs.splitlines():
+            line = line.strip()
             try:
                 event_data = json.loads(line)
                 to_print = json.dumps(event, indent=4)
@@ -115,34 +114,37 @@ class Mongod(DBHandler):
 
     def setup(self):
         self._tmpdir = tempfile.TemporaryDirectory()
-        self._data_dir = Path(self._tmpdir.name).resolve()
+        basedir = Path(self._tmpdir.name).resolve()
+        data_dir = self._data_dir = basedir / "data"
+        data_dir.mkdir(exist_ok=True, parents=True)
+        log_path = self._log_path = basedir / "mongod.log"
 
         self._proc = subprocess.Popen(
             [
                 self._mongod_exe,
                 "--dbpath",
                 self._data_dir,
+                "--logpath",
+                self._log_path,
             ],
-            text=True,
             **self._proc_kwargs,
         )
-        # the uncaught exception raised here will cause a pytest INTERNALERROR
         try:
             self._wait_for_server_online(retry_intervals_s=self._retry)
         except Exception as err:
             self._log(f"server setup failed: {err=}")
             self.teardown()
             self._log(f"{self._proc.returncode=}")
-            self._display_logs(self._proc_output)
+            self._display_logs(log_path.read_text())
 
     def __str__(self) -> str:
         return f"{self.__class__.__name__}({self._mongod_exe} pid={self._proc.pid} returncode={self._proc.returncode})"
 
     def teardown(self, timeout=5):
         self._proc.send_signal(self._shutdown_signal)
-        # err will be empty because we're not capturing it
-        self._proc_output, err = self._proc.communicate(timeout=timeout)
-        self._display_logs(self._proc_output)
+        # out, err will be empty because we're not capturing them
+        out, err = self._proc.communicate(timeout=timeout)
+        self._display_logs(self._log_path.read_text())
         self._tmpdir.cleanup()
 
 
@@ -169,7 +171,7 @@ class Plugin:
             self._server = NoServer()
             self._make_client = MockDB
         elif mode == "mongod":
-            self._server = Mongod(retry=[1, 2, 5, 10, 20, 30, 60, 120, 180])
+            self._server = Mongod(retry=[1, 2, 5, 10, 30])
             self._make_client = self._server.client
         else:
             raise pytest.UsageError(
